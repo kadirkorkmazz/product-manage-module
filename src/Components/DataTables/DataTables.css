@@ -1,0 +1,41 @@
+.datatable-table .table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 10px 0 10px;
+}
+
+@media screen and (max-width: 960px) {
+  .datatable-table .table-header {
+    align-items: flex-start;
+  }
+}
+.datatable-table .product-image {
+  width: 100px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+.datatable-table .p-dialog .product-image {
+  width: 150px;
+  margin: 0 auto 2rem auto;
+  display: block;
+}
+.datatable-table .confirmation-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media screen and (max-width: 960px) {
+  .datatable-table .p-toolbar {
+    flex-wrap: wrap;
+  }
+  .datatable-table .p-toolbar .p-button {
+    margin-bottom: 0.25rem;
+  }
+  .datatable-table .table-header {
+    flex-direction: column;
+  }
+  .datatable-table .table-header .p-input-icon-left,
+  .datatable-table .table-header input {
+    width: 100%;
+  }
+}
