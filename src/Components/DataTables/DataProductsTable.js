@@ -10,16 +10,18 @@ import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import './DataTables.css';
 
-import createId from '../Utils/createId';
-import { priceBodyTemplate, imageBodyTemplate } from '../Utils/Templates';
-import { findIndexById } from '../Utils/findIndexById';
-import HeaderTable from '../Utils/HeaderTable';
-import ItemDialogFooter from '../Utils/ItemDialogFooter';
-import DeleteItemDialogFooter from '../Utils/DeleteItemDialogFooter';
-import { getData } from '../../Helpers/getData';
-import { addData } from '../../Helpers/addData';
-import { setData } from '../../Helpers/setData';
-import { deleteData } from '../../Helpers/deleteData';
+import createId from '../../Helpers/createId';
+import { priceBodyTemplate, imageBodyTemplate } from '../../Helpers/Templates';
+import { findIndexById } from '../../Helpers/findIndexById';
+import HeaderTable from '../../Helpers/HeaderTable';
+import ItemDialogFooter from '../../Helpers/ItemDialogFooter';
+import DeleteItemDialogFooter from '../../Helpers/DeleteItemDialogFooter';
+import {
+  getData,
+  addData,
+  setData,
+  deleteData,
+} from '../../Helpers/apiQueries';
 
 const DataProductsTable = () => {
   let emptyProduct = {
@@ -40,17 +42,30 @@ const DataProductsTable = () => {
   const toast = useRef(null);
   const dt = useRef(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+  });
+
+  useEffect(() => {
+    setIsDataLoading(true);
+    fetchData();
+  }, [lazyParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchData = async () => {
     let variety = 'products';
-    const response = await getData(variety);
-    setProducts(response.products);
+    const response = await getData(variety, lazyParams);
+    setTotalRecords(response.count);
+    setProducts(response.items);
     setIsDataLoading(false);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const onPage = (e) => {
+    e.page = e.page + 1;
+    setLazyParams(e);
+  };
 
   const openNew = () => {
     setProduct(emptyProduct);
@@ -91,6 +106,7 @@ const DataProductsTable = () => {
         _products.push(_product);
         console.log(_product);
         addData(_product, 'products');
+        setTotalRecords(totalRecords + 1);
         toast.current.show({
           severity: 'success',
           summary: 'Başarılı',
@@ -120,8 +136,8 @@ const DataProductsTable = () => {
     setProducts(_products);
     setDeleteProductDialog(false);
     deleteData(product.id, 'products');
-
     setProduct(emptyProduct);
+    setTotalRecords(totalRecords - 1);
     toast.current.show({
       severity: 'success',
       summary: 'Başarılı',
@@ -173,8 +189,12 @@ const DataProductsTable = () => {
           value={products}
           dataKey='id'
           paginator
+          onPage={onPage}
           rows={10}
-          rowsPerPageOptions={[5, 10, 25]}
+          lazy
+          loading={isDataLoading}
+          totalRecords={totalRecords}
+          first={lazyParams.first}
           paginatorTemplate='FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'
           currentPageReportTemplate='Toplam {totalRecords} üründen {first} ile {last} arasındakiler '
           header={
@@ -182,40 +202,25 @@ const DataProductsTable = () => {
           }
           responsiveLayout='scroll'
         >
-          <Column
-            body={actionBodyTemplate}
-            style={{ minWidth: '8rem' }}
-          ></Column>
+          <Column className='actionBodyArea' body={actionBodyTemplate}></Column>
 
+          <Column className='titleCol' field='title' header='Ürün Adı'></Column>
           <Column
-            field='title'
-            header='Ürün Adı'
-            sortable
-            style={{ minWidth: '16rem' }}
-          ></Column>
-          <Column
+            className='descCol'
             field='description'
             header='Açıklama'
-            style={{ minWidth: '16rem' }}
           ></Column>
           <Column
+            className='priceCol'
             field='price'
             header='Ücret'
             body={priceBodyTemplate}
-            sortable
-            style={{ minWidth: '8rem' }}
           ></Column>
+          <Column className='stockCol' field='stock' header='Stok'></Column>
           <Column
-            field='stock'
-            header='Stok'
-            sortable
-            style={{ minWidth: '5rem' }}
-          ></Column>
-          <Column
+            className='categoryCol'
             field='category'
             header='Kategori'
-            sortable
-            style={{ minWidth: '10rem' }}
           ></Column>
           <Column
             field='thumbnail'
@@ -227,10 +232,9 @@ const DataProductsTable = () => {
 
       <Dialog
         visible={productDialog}
-        style={{ width: '450px' }}
         header='Ürün detayları'
         modal
-        className='p-fluid'
+        className='p-fluid addDialog'
         footer={<ItemDialogFooter saveItem={saveProduct} />}
         onHide={hideDialog}
       >
@@ -308,8 +312,8 @@ const DataProductsTable = () => {
       </Dialog>
 
       <Dialog
+        className='deleteItemDialog'
         visible={deleteProductDialog}
-        style={{ width: '450px' }}
         header='Onay'
         modal
         footer={
@@ -321,10 +325,7 @@ const DataProductsTable = () => {
         onHide={hideDeleteProductDialog}
       >
         <div className='confirmation-content'>
-          <i
-            className='pi pi-exclamation-triangle mr-3'
-            style={{ fontSize: '2rem' }}
-          />
+          <i className='pi pi-exclamation-triangle mr-3 warning-icon' />
           {product && (
             <span>
               <b>{product.title}</b> adlı ürünü silmek istediğine emin misin?

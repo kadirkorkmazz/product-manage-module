@@ -10,15 +10,17 @@ import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import './DataTables.css';
 
-import createId from '../Utils/createId';
-import { findIndexById } from '../Utils/findIndexById';
-import HeaderTable from '../Utils/HeaderTable';
-import ItemDialogFooter from '../Utils/ItemDialogFooter';
-import DeleteItemDialogFooter from '../Utils/DeleteItemDialogFooter';
-import { getData } from '../../Helpers/getData';
-import { addData } from '../../Helpers/addData';
-import { setData } from '../../Helpers/setData';
-import { deleteData } from '../../Helpers/deleteData';
+import createId from '../../Helpers/createId';
+import { findIndexById } from '../../Helpers/findIndexById';
+import HeaderTable from '../../Helpers/HeaderTable';
+import ItemDialogFooter from '../../Helpers/ItemDialogFooter';
+import DeleteItemDialogFooter from '../../Helpers/DeleteItemDialogFooter';
+import {
+  getData,
+  addData,
+  setData,
+  deleteData,
+} from '../../Helpers/apiQueries';
 
 const DataPostsTable = () => {
   let emptyPost = {
@@ -29,7 +31,7 @@ const DataPostsTable = () => {
     reactions: 0,
   };
 
-  const [posts, setPosts] = useState(null);
+  const [posts, setPosts] = useState([]);
   const [postDialog, setPostDialog] = useState(false);
   const [deletePostDialog, setDeletePostDialog] = useState(false);
   const [post, setPost] = useState(emptyPost);
@@ -37,17 +39,31 @@ const DataPostsTable = () => {
   const toast = useRef(null);
   const dt = useRef(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  const [lazyParams, setLazyParams] = useState({
+    first: 0,
+    rows: 10,
+    page: 1,
+  });
+
+  useEffect(() => {
+    setIsDataLoading(true);
+    fetchData();
+  }, [lazyParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchData = async () => {
     let variety = 'posts';
-    const response = await getData(variety);
-    setPosts(response.posts);
+    const response = await getData(variety, lazyParams);
+    setTotalRecords(response.count);
+    setPosts(response.items);
     setIsDataLoading(false);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const onPage = (e) => {
+    e.page = e.page + 1;
+    setLazyParams(e);
+  };
 
   const openNew = () => {
     setPost(emptyPost);
@@ -86,6 +102,8 @@ const DataPostsTable = () => {
         _post.id = createId();
         _posts.push(_post);
         addData(_post, 'posts');
+        setTotalRecords(totalRecords + 1);
+
         toast.current.show({
           severity: 'success',
           summary: 'Başarılı',
@@ -115,8 +133,9 @@ const DataPostsTable = () => {
     setPosts(_posts);
     setDeletePostDialog(false);
     deleteData(post.id, 'posts');
-
     setPost(emptyPost);
+    setTotalRecords(totalRecords - 1);
+
     toast.current.show({
       severity: 'success',
       summary: 'Başarılı',
@@ -168,8 +187,12 @@ const DataPostsTable = () => {
           value={posts}
           dataKey='id'
           paginator
+          onPage={onPage}
           rows={10}
-          rowsPerPageOptions={[5, 10, 25]}
+          lazy
+          loading={isDataLoading}
+          totalRecords={totalRecords}
+          first={lazyParams.first}
           paginatorTemplate='FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown'
           currentPageReportTemplate='Toplam {totalRecords} gönderiden {first} ile {last} arasındakiler'
           header={
@@ -181,44 +204,25 @@ const DataPostsTable = () => {
           }
           responsiveLayout='scroll'
         >
-          <Column
-            body={actionBodyTemplate}
-            style={{ minWidth: '8rem' }}
-          ></Column>
+          <Column className='actionBodyArea' body={actionBodyTemplate}></Column>
+
+          <Column className='titleCol' field='title' header='Başlık'></Column>
+          <Column className='bodyCol' field='body' header='Gönderi'></Column>
 
           <Column
-            field='title'
-            header='Başlık'
-            sortable
-            style={{ minWidth: '16rem' }}
-          ></Column>
-          <Column
-            field='body'
-            header='Gönderi'
-            style={{ minWidth: '16rem' }}
-          ></Column>
-
-          <Column
+            className='reactCol'
             field='reactions'
             header='Tepkiler'
-            sortable
-            style={{ minWidth: '5rem' }}
           ></Column>
-          <Column
-            field='tags'
-            header='Etiketler'
-            sortable
-            style={{ minWidth: '10rem' }}
-          ></Column>
+          <Column className='tagsCol' field='tags' header='Etiketler'></Column>
         </DataTable>
       </div>
 
       <Dialog
         visible={postDialog}
-        style={{ width: '450px' }}
         header='Gönderi Detayları'
         modal
-        className='p-fluid'
+        className='p-fluid addDialog'
         footer={<ItemDialogFooter saveItem={savePost} />}
         onHide={hideDialog}
       >
@@ -274,8 +278,8 @@ const DataPostsTable = () => {
       </Dialog>
 
       <Dialog
+        className='deleteItemDialog'
         visible={deletePostDialog}
-        style={{ width: '450px' }}
         header='Onay'
         modal
         footer={
@@ -287,10 +291,7 @@ const DataPostsTable = () => {
         onHide={hideDeletePostDialog}
       >
         <div className='confirmation-content'>
-          <i
-            className='pi pi-exclamation-triangle mr-3'
-            style={{ fontSize: '2rem' }}
-          />
+          <i className='pi pi-exclamation-triangle mr-3 warning-icon' />
           {post && (
             <span>
               <b>{post.title}</b> başlıklı gönderiyi silmek istediğine emin

@@ -5,11 +5,6 @@
   margin: 0 10px 0 10px;
 }
 
-@media screen and (max-width: 960px) {
-  .datatable-table .table-header {
-    align-items: flex-start;
-  }
-}
 .datatable-table .product-image {
   width: 100px;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
@@ -38,4 +33,53 @@
   .datatable-table .table-header input {
     width: 100%;
   }
+}
+
+.stokCol {
+  min-width: 5rem;
+}
+
+.categoryCol {
+  min-width: 10rem;
+}
+
+.addDialog {
+  width: 500px;
+}
+
+.deleteItemDialog {
+  width: 500px;
+}
+
+i.warning-icon {
+  font-size: 2rem;
+  margin-right: 10px;
+}
+
+.actionBodyArea {
+  min-width: 8rem;
+}
+
+.titleCol {
+  min-width: 16rem;
+}
+
+.descCol {
+  min-width: 16rem;
+}
+
+.priceCol {
+  min-width: 8rem;
+}
+
+.bodyCol {
+  min-width: 16rem;
+}
+
+.tagsCol {
+  min-width: 10rem;
+}
+
+.reactCol {
+  min-width: 5rem;
 }
