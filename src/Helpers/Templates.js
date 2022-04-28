@@ -17,3 +17,7 @@ export const imageBodyTemplate = (rowData) => {
     />
   );
 };
+
+export const tagsTemplate = (rowData) => {
+  return rowData.tags.toString();
+};

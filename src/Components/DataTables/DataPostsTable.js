@@ -15,6 +15,7 @@ import { findIndexById } from '../../Helpers/findIndexById';
 import HeaderTable from '../../Helpers/HeaderTable';
 import ItemDialogFooter from '../../Helpers/ItemDialogFooter';
 import DeleteItemDialogFooter from '../../Helpers/DeleteItemDialogFooter';
+import { tagsTemplate } from '../../Helpers/Templates';
 import {
   getData,
   addData,
@@ -214,7 +215,12 @@ const DataPostsTable = () => {
             field='reactions'
             header='Tepkiler'
           ></Column>
-          <Column className='tagsCol' field='tags' header='Etiketler'></Column>
+          <Column
+            className='tagsCol'
+            field='tags'
+            header='Etiketler'
+            body={tagsTemplate}
+          ></Column>
         </DataTable>
       </div>
 
